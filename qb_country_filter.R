@@ -8,64 +8,76 @@ setwd(wd)
 
 recipient_country = "NG"
 
-# 1. Activities filtered by activity-level recipient country ####
+# 1. Query filtered transactions ####
 
 url = paste0(
-  "https://iatidatastore.iatistandard.org/search/activity?q=recipient_country_code:(",
+  "https://iatidatastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
   recipient_country,
-  ")&wt=xslt&tr=activity-csv.xsl&rows=10000"
+  ") OR activity_recipient_country_code:(",
+  recipient_country,
+  ")) AND transaction_date_iso_date:[2015-12-31T00:00:00Z TO *])&wt=csv&tr=transaction-csv.xsl&rows=100000"
 )
-afa_filename = paste0(recipient_country,"_activity_filtered_activities.csv")
+trans_filename = paste0(recipient_country,"_transactions.csv")
 
-if(!file.exists(afa_filename)){
-  data_file = download.file(
-    url,
-    destfile=afa_filename
+if(!file.exists(trans_filename)){
+  download.file(
+    URLencode(url),
+    destfile=trans_filename
   )
 }
 
-afa <- read.table(
-  afa_filename,
+trans <- read.table(
+  trans_filename,
   header=T,
   sep=",",
   quote=c("\""),
   na.strings="",
   stringsAsFactors=FALSE,
-  flush=T
+  flush=T,
+  fill=T
 )
-write_excel_csv(afa,paste0(recipient_country,"_activity_filtered_activities_utf8.csv"),na="")
+write_excel_csv(trans,paste0(recipient_country,"_transactions_utf8.csv"),na="")
 
+# 2. Filter by transaction type, join activity level data
+trans = subset(trans,transaction_type %in% c(3, 4))
+drop = names(trans)[which(startsWith(names(trans),"activity_"))]
+drop = c(drop,"X_version_","title_lang","id","reporting_org_secondary_reporter")
+trans[,drop] = NULL
 
-# 2. Split by transaction ####
+search_terms = unique(trans$iati_identifier)
 
-t_names = c("transaction.type.code","transaction.date.iso.date","transaction.value.currency","transaction.value.date","transaction.value","transaction.provider.org.provider.activity.id","transaction.provider.org.type","transaction.provider.org.ref","transaction.provider.org.narrative","transaction.receiver.org.receiver.activity.id","transaction.receiver.org.type","transaction.receiver.org.ref","transaction.receiver.org.narrative","transaction.disburstment.channel.code","transaction.sector.vocabulary","transaction.sector.code","transaction.recipient.country.code","transaction.recipient.region.code","transaction.recipient.region.vocabulary","transaction.flow.type.code","transaction.finance.type.code","transaction.aid.type.code","transaction.aid.type.vocabulary","transaction.tied.status.code")
-afa$activity.number = c(1:nrow(afa))
-names(afa) = gsub("_",".",names(afa))
-original_names = names(afa)
-afa.split = cSplit(afa,t_names,",")
-new_names = setdiff(names(afa.split),original_names)
+search_fields = c(
+  "iati_identifier"
+)
 
-split_list = list()
-chunk_size = 100
-chunk_list = seq.int(1,nrow(afa.split),by=100)
+search_query = ""
+search_grid = expand.grid(search_fields, search_terms, stringsAsFactors = F)
+search_strs = paste0(search_grid$Var1, ':"', search_grid$Var2, '"')
+chunk = 100
+# TODO: Chunk download IATI activity data
 
-for(i in 1:length(chunk_list-1)){
-  start_i = chunk_list[i]
-  end_i = min(chunk_list[i+1], nrow(afa.split))
-  afa.split.segment = afa.split[c(start_i:end_i),]
-  afa.split.segment.long = reshape(afa.split.segment, varying=new_names, direction="long", sep="_")
-  split_list[[i]] = afa.split.segment.long
+search_url = paste0(
+  'https://iatidatastore.iatistandard.org/search/activity?q=(',
+  search_query,
+  ')&wt=csv&tr=activity-csv.xsl&rows=10000'
+)
+
+act_filename = paste0(recipient_country,"_activities.csv")
+
+if(!file.exists(act_filename)){
+  download.file(
+    URLencode(search_url),
+    destfile=act_filename
+  )
 }
 
-afa.split.long = rbindlist(split_list)
-
-afa.split.long[ , `:=`( max_count = .N , count = 1:.N ) , by = .(activity.number) ]
-afa.split.long=subset(afa.split.long, (!is.na(transaction.type.code) & !is.na(transaction.value)) | max_count==1 | count==1)
-afa.split.long[,c("max_count", "count", "activity.number", "id", "time")] = NULL
-
-afa = afa.split.long
-names(afa) = gsub(".","_",names(afa),fixed=T)
-afa$transaction_date_iso_date = anydate(afa$transaction_date_iso_date)
-afa = subset(afa,transaction_date_iso_date >= as.Date("2016-01-01"))
-afa$transaction_value = as.numeric(as.character(afa$transaction_value))
-write_excel_csv(afa,paste0(recipient_country,"_activity_filtered_activities_split_t.csv"), na="")
+act <- read.table(
+  act_filename,
+  header=T,
+  sep=",",
+  quote=c("\""),
+  na.strings="",
+  stringsAsFactors=FALSE,
+  flush=T,
+  fill=T
+)
