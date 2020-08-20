@@ -44,7 +44,21 @@ names(afa) = gsub("_",".",names(afa))
 original_names = names(afa)
 afa.split = cSplit(afa,t_names,",")
 new_names = setdiff(names(afa.split),original_names)
-afa.split.long = reshape(afa.split, varying=new_names, direction="long", sep="_")
+
+split_list = list()
+chunk_size = 100
+chunk_list = seq.int(1,nrow(afa.split),by=100)
+
+for(i in 1:length(chunk_list-1)){
+  start_i = chunk_list[i]
+  end_i = min(chunk_list[i+1], nrow(afa.split))
+  afa.split.segment = afa.split[c(start_i:end_i),]
+  afa.split.segment.long = reshape(afa.split.segment, varying=new_names, direction="long", sep="_")
+  split_list[[i]] = afa.split.segment.long
+}
+
+afa.split.long = rbindlist(split_list)
+
 afa.split.long[ , `:=`( max_count = .N , count = 1:.N ) , by = .(activity.number) ]
 afa.split.long=subset(afa.split.long, (!is.na(transaction.type.code) & !is.na(transaction.value)) | max_count==1 | count==1)
 afa.split.long[,c("max_count", "count", "activity.number", "id", "time")] = NULL
