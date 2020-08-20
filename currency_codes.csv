@@ -1,0 +1,196 @@
+ISO,currency,cc,duplicate
+AFG,Afghan Afghani,AFN,
+ALB,Albanian lek,ALL,
+ABW,Aruban Florin,AWG,
+DZA,Algerian dinar,DZD,
+AGO,Angolan kwanza,AOA,
+ARG,Argentine peso,ARS,
+ARM,Armenian dram,AMD,
+AUS,Australian dollar,AUD,
+KIR,Australian dollar,AUD,1
+NRU,Australian dollar,AUD,1
+TUV,Australian dollar,AUD,1
+AZE,Azerbaijan manat,AZN,
+BHS,Bahamian dollar,BSD,
+BHR,Bahrain dinar,BHD,
+BGD,Bangladesh taka,BDT,
+BRB,Barbados dollar,BBD,
+BLR,Belarusian rubel,BYN,
+BLZ,Belize dollar,BZD,
+BTN,Bhutanese ngultrum,BTN,
+BOL,Bolivian boliviano,BOB,
+BWA,Botswana pula,BWP,
+BRA,Brazilian real,BRL,
+BRN,Brunei dollar,BND,
+BGR,Bulgarian lev,BGN,
+BDI,Burundi franc,BIF,
+CPV,Cabo Verde escudo,CVE,
+KHM,Cambodian riel,KHR,
+CAN,Canadian dollar,CAD,
+CMR,CFA franc,XAF,
+CAF,CFA franc,XAF,1
+TCD,CFA franc,XAF,1
+COG,CFA franc,XAF,1
+GNQ,CFA franc,XAF,1
+GAB,CFA franc,XAF,1
+BEN,CFA franc,XOF,1
+BFA,CFA franc,XOF,1
+CIV,CFA franc,XOF,1
+GNB,CFA franc,XOF,1
+MLI,CFA franc,XOF,1
+NER,CFA franc,XOF,1
+SEN,CFA franc,XOF,
+TGO,CFA franc,XOF,1
+CHL,Chilean peso,CLP,
+CHN,Chinese yuan,CNY,
+COL,Colombian peso,COP,
+COM,Comorian franc,KMF,
+COD,Congo franc,CDF,
+BIH,Convertible marka,BAM,
+CRI,Costa Rican colón,CRC,
+HRV,Croatian kuna,HRK,
+CZE,Czech koruna,CZK,
+DNK,Danish krone,DKK,
+DJI,Djibouti franc,DJF,
+DOM,Dominican peso,DOP,
+ATG,Eastern Caribbean dollar,XCD,1
+DMA,Eastern Caribbean dollar,XCD,1
+GRD,Eastern Caribbean dollar,XCD,1
+KNA,Eastern Caribbean dollar,XCD,
+LCA,Eastern Caribbean dollar,XCD,1
+VCT,Eastern Caribbean dollar,XCD,1
+EGY,Egyptian pound,EGP,
+ERI,Eritrean nakfa,ERN,
+ETH,Ethiopian birr,ETB,
+AUT,Euro,EUR,1
+BEL,Euro,EUR,1
+CYP,Euro,EUR,1
+EST,Euro,EUR,1
+FIN,Euro,EUR,1
+FRA,Euro,EUR,
+DEU,Euro,EUR,1
+GRC,Euro,EUR,1
+IRL,Euro,EUR,1
+ITA,Euro,EUR,1
+KOS,Euro,EUR,1
+UVK,Euro,EUR,1
+LUX,Euro,EUR,1
+MLT,Euro,EUR,1
+MNE,Euro,EUR,1
+NLD,Euro,EUR,1
+PRT,Euro,EUR,1
+SMR,Euro,EUR,1
+SVK,Euro,EUR,1
+SVN,Euro,EUR,1
+ESP,Euro,EUR,1
+FJI,Fiji dollar,FJD,
+GMB,Gambian dalasi,GMD,
+GEO,Georgian lari,GEL,
+GHA,Ghanaian cedi,GHS,
+GTM,Guatemalan quetzal,GTQ,
+GIN,Guinean franc,GNF,
+GUY,Guyana dollar,GYD,
+HTI,Haitian gourde,HTG,
+HND,Honduran lempira,HNL,
+HKG,Hong Kong dollar,HKD,
+HUN,Hungarian forint,HUF,
+ISL,Icelandic króna,ISK,
+IND,Indian rupee,INR,
+IDN,Indonesian rupiah,IDR,
+IRN,Iranian rial,IRR,
+IRQ,Iraqi dinar ,IQD,
+ISR,Israeli shekel,ILS,
+JAM,Jamaica dollar,JMD,
+JPN,Japanese yen,JPY,
+JOR,Jordanian dinar,JOD,
+KAZ,Kazakhstani tenge,KZT,
+KEN,Kenya shilling,KES,
+KOR,Korean won,KRW,
+KWT,Kuwaiti dinar,KWD,
+KGZ,Kyrgyz som,KGS,
+LAO,Lao kip,LAK,
+LVA,Latvian lats,LVL,
+LBN,Lebanese pound,LBP,
+LSO,Lesotho loti,LSL,
+LBY,Libyan dinar,LYD,
+LTU,Lithuanian litas,LTL,
+MAC,Macanese pataca,MOP,
+MKD,Macedonian denar,MKD,
+MDG,Malagasy ariary,MGA,
+MWI,Malawi kwacha,MWK,
+MYS,Malaysian ringgit,MYR,
+MDV,Maldivian rufiyaa,MVR,
+MRT,Mauritanian ouguiya,MRU,
+MUS,Mauritian rupee,MUR,
+MEX,Mexican peso,MXN,
+MDA,Moldovan leu,MDL,
+MNG,Mongolian togrog,MNT,
+MAR,Moroccan dirham,MAD,
+MOZ,Mozambican metical,MZN,
+MMR,Myanmar kyat,MMK,
+NAM,Namibia dollar,NAD,
+NPL,Nepalese rupee,NPR,
+TWN,New Taiwan dollar,TWD,
+TKM,New Turkmen manat,TMT,
+NZL,New Zealand dollar,NZD,
+NIC,Nicaraguan córdoba,NIO,
+NGA,Nigerian naira,NGN,
+NOR,Norwegian krone,NOK,
+OMN,Omani rial,OMR,
+PAK,Pakistan rupee,PKR,
+PNG,Papua New Guinea kina,PGK,
+PRY,Paraguayan guaraní,PYG,
+PER,Peruvian nuevo sol,PEN,
+PHL,Philippine peso,PHP,
+POL,Polish zloty,PLN,
+GBR,Pound sterling,GBP,
+QAT,Qatari riyal,QAR,
+ROU,Romanian leu,RON,
+RUS,Russian ruble,RUB,
+RWA,Rwanda franc,RWF,
+WSM,Samoa tala,WST,
+STP,São Tomé and Príncipe dobra,STN,
+SAU,Saudi Arabian riyal,SAR,
+SRB,Serbian dinar,RSD,
+SYC,Seychelles rupee,SCR,
+SLE,Sierra Leonean leone,SLL,
+SGP,Singapore dollar,SGD,
+SOM,Somali shilling,SOS,
+SLB,Solomon Islands dollar,SBD,
+ZAF,South African rand,ZAR,
+SSD,South Sudanese pound,SSP,
+LKA,Sri Lanka rupee,LKR,
+SDN,Sudanese pound,SDG,
+SUR,Surinamese dollar,SRD,
+SWZ,Swaziland lilangeni,SZL,
+SWE,Swedish krona,SEK,
+CHE,Swiss franc,CHF,
+SYR,Syrian pound,SYP,
+TJK,Tajik somoni,TJS,
+TZA,Tanzania shilling,TZS,
+THA,Thai baht,THB,
+TON,Tongan pa’anga,TOP,
+TTO,Trinidad and Tobago dollar,TTD,
+TUN,Tunisian dinar,TND,
+TUR,Turkish lira,TRY,
+ARE,U.A.E. dirham,AED,
+ECU,U.S. dollar,USD,1
+SLV,U.S. dollar,USD,1
+LBR,U.S. dollar,USD,1
+MHL,U.S. dollar,USD,1
+FSM,U.S. dollar,USD,1
+PLW,U.S. dollar,USD,1
+PAN,U.S. dollar,USD,1
+PRI,U.S. dollar,USD,1
+TLS,U.S. dollar,USD,1
+USA,U.S. dollar,USD,
+ZWE,U.S. dollar,USD,1
+UGA,Uganda shilling,UGX,
+UKR,Ukrainian hryvnia,UAH,
+URY,Uruguayan peso,UYU,
+UZB,Uzbek sum,UZS,
+VUT,Vanuatu vatu,VUV,
+VEN,Venezuelan bolívar fuerte,VES,
+VNM,Vietnamese dong,VND,
+YEM,Yemeni rial,YER,
+ZMB,Zambian kwacha,ZMW,
