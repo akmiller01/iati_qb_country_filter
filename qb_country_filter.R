@@ -124,7 +124,7 @@ drop = c(drop, names(act)[which(startsWith(names(act),"result"))])
 drop = c(drop, names(act)[which(startsWith(names(act),"crs"))])
 drop = c(drop, names(act)[which(startsWith(names(act),"document"))])
 
-drop = c(drop,"V221")
+drop = c(drop,"V221","transaction_type_code")
 drop = unique(drop)
 act[,drop] = NULL
 overlapping_names = intersect(names(act),names(trans))
@@ -132,6 +132,7 @@ overlapping_names = overlapping_names[which(overlapping_names!="iati_identifier"
 act[,overlapping_names] = NULL
 
 all = merge(trans,act,by="iati_identifier")
+setnames(all,"transaction_type", "transaction_type_code")
 fwrite(all,paste0(recipient_country,"_transactions_merge.csv"))
 
 # 3. Split recipient country ####
@@ -255,3 +256,144 @@ all = agg.split.long
 names(all) = gsub(".","_",names(all),fixed=T)
 post = sum(all$country_sector_transaction_value,na.rm=T)
 pre == post
+
+# 5. Recode, join codelists, convert to USD
+
+
+org_id_imp = fread("../IATIOrganisationIdentifier.csv")
+org_id_imp = org_id_imp[,c("code","name")]
+names(org_id_imp) = c("ref","recode")
+
+implementers = function(row){
+  org_roles = as.character(row$participating_org_role)
+  org_narratives = as.character(row$participating_org_narrative)
+  org_types = as.character(row$participating_org_type)
+  org_refs = as.character(row$participating_org_ref)
+  
+  role_split = str_split(org_roles,",")[[1]]
+  narr_split = str_split(org_narratives,",")[[1]]
+  type_split = str_split(org_types,",")[[1]]
+  ref_split = str_split(org_refs,",")[[1]]
+  max_len = max(length(role_split),length(narr_split),length(type_split),length(ref_split))
+  if(length(role_split)<max_len){
+    lendiff = max_len - length(role_split)
+    role_split = c(role_split, rep("",lendiff))
+  }
+  if(length(narr_split)<max_len){
+    lendiff = max_len - length(narr_split)
+    narr_split = c(narr_split, rep("",lendiff))
+  }
+  if(length(type_split)<max_len){
+    lendiff = max_len - length(type_split)
+    type_split = c(type_split, rep("",lendiff))
+  }
+  if(length(ref_split)<max_len){
+    lendiff = max_len - length(ref_split)
+    ref_split = c(ref_split, rep("",lendiff))
+  }
+  row_df = data.frame(role=role_split,narr=narr_split,type=type_split,ref=ref_split)
+  row_df = subset(row_df,role=="4")
+  row_df = merge(row_df,org_id_imp,by="ref",all.x=T)
+  row_df$narr[which(is.na(row_df$narr))] = row_df$recode[which(is.na(row_df$narr))]
+  row$implementing_narrative = paste0(row_df$narr,collapse=",")
+  return(row)
+}
+
+sectors = fread("../Sector.csv")
+sectors = sectors[,c("code","name")]
+names(sectors) = c("x_sector_code","x_sector_name")
+all$x_sector_code = as.numeric(as.character(all$x_sector_code))
+all$x_sector_vocabulary[which(is.na(all$x_sector_code))] = 1
+all$x_sector_percentage[which(is.na(all$x_sector_code))] = 100
+all$x_sector_code[which(is.na(all$x_sector_code))] = 99810
+all = merge(all,sectors,all.x=T)
+
+sector_cats = fread("../SectorCategory.csv")
+sector_cats = sector_cats[,c("code","name")]
+names(sector_cats) = c("x_sector_cat_code","x_sector_cat_name")
+all$x_sector_cat_code = as.numeric(substr(as.character(all$x_sector_code),1,3))
+all = merge(all,sector_cats,by="x_sector_cat_code",all.x=T)
+
+org_type = fread("../OrganisationType.csv")
+org_type = org_type[,c("code","name")]
+names(org_type) = c("reporting_org_type_code","reporting_org_type_name")
+all$reporting_org_type_code = as.numeric(as.character(all$reporting_org_type_code))
+all = merge(all,org_type,by="reporting_org_type_code",all.x=T)
+
+all$x_currency = all$transaction_value_currency
+all$x_currency[which(is.na(all$x_currency))] = all$default_currency[which(is.na(all$x_currency))] 
+
+all$x_aid_type_code = all$transaction_aid_type_code
+all$x_aid_type_code = as.character(all$x_aid_type_code)
+all$x_aid_type_vocabulary = all$transaction_aid_type_vocabulary
+all$x_aid_type_vocabulary = as.character(all$x_aid_type_vocabulary)
+all$x_aid_type_vocabulary[which(is.na(all$x_aid_type_code))] = all$default_aid_type_vocabulary[which(is.na(all$x_aid_type_code))]
+all$x_aid_type_code[which(is.na(all$x_aid_type_code))] = all$default_aid_type_code[which(is.na(all$x_aid_type_code))]
+
+all$x_finance_type_code = all$transaction_finance_type_code
+all$x_finance_type_code[which(is.na(all$x_finance_type_code))] = all$default_finance_type_code[which(is.na(all$x_finance_type_code))]
+
+all_implementing = all[,c("participating_org_role","participating_org_narrative","participating_org_type","participating_org_ref")]
+all_implementing$implementing_narrative = NA
+all_implementing = data.frame(all_implementing)
+pb = txtProgressBar(max=nrow(all_implementing),style=3)
+for(i in 1:nrow(all_implementing)){
+  setTxtProgressBar(pb,i)
+  all_implementing[i,] = implementers(all_implementing[i,])
+}
+close(pb)
+all_implementing = cSplit(all_implementing,c("implementing_narrative"),",")
+all_implementing[,c("participating_org_role","participating_org_narrative","participating_org_type","participating_org_ref")] = NULL
+all = cbind(all,all_implementing)
+
+all$x_transaction_provider_org = all$transaction_provider_org_narrative
+all$x_transaction_provider_org = as.character(all$x_transaction_provider_org)
+
+org_id = fread("../IATIOrganisationIdentifier.csv")
+org_id = org_id[,c("code","name")]
+names(org_id) = c("transaction_provider_org_ref","x_transaction_provider_org_recode")
+all = merge(all,org_id,by="transaction_provider_org_ref",all.x=T)
+
+all$x_transaction_provider_org[which(is.na(all$x_transaction_provider_org))] = all$x_transaction_provider_org_recode[which(is.na(all$x_transaction_provider_org))]
+all$x_transaction_provider_org_recode = NULL
+all$x_transaction_provider_org[which(is.na(all$x_transaction_provider_org))] = "Not specified"
+
+all$x_transaction_receiver_org = all$transaction_receiver_org_narrative
+all$x_transaction_receiver_org = as.character(all$x_transaction_receiver_org)
+names(org_id) = c("transaction_receiver_org_ref","x_transaction_receiver_org_recode")
+all = merge(all,org_id,by="transaction_receiver_org_ref",all.x=T)
+all$x_transaction_receiver_org[which(is.na(all$x_transaction_receiver_org))] = all$x_transaction_receiver_org_recode[which(is.na(all$x_transaction_receiver_org))]
+all$x_transaction_receiver_org_recode = NULL
+all$x_transaction_receiver_org[which(is.na(all$x_transaction_receiver_org))] = "Not specified"
+
+transaction_types = fread("../TransactionType.csv")
+transaction_types = transaction_types[,c("code","name")]
+names(transaction_types) = c("transaction_type_code","transaction_type_name")
+all$transaction_type_code = as.numeric(all$transaction_type_code)
+all = merge(all,transaction_types,by="transaction_type_code",all.x=T)
+
+organisation_types = fread("../OrganisationType.csv")
+organisation_types = organisation_types[,c("code","name")]
+names(organisation_types) = c("reporting_org_type_code","reporting_org_type_name")
+all$reporting_org_type_code = as.numeric(all$reporting_org_type_code)
+all = merge(all,organisation_types,by="reporting_org_type_code",all.x=T)
+
+finance_types = fread("../FinanceType.csv")
+finance_types = finance_types[,c("code","name")]
+names(finance_types) = c("x_finance_type_code","x_finance_type_name")
+all$x_finance_type_code = as.numeric(all$x_finance_type_code)
+all = merge(all,finance_types,by="x_finance_type_code",all.x=T)
+
+aid_types = fread("../AidType.csv")
+aid_types = aid_types[,c("code","name")]
+names(aid_types) = c("x_aid_type_code","x_aid_type_name")
+all$x_aid_type_code = as.character(gsub(",","",all$x_aid_type_code))
+all = merge(all,aid_types,by="x_aid_type_code",all.x=T)
+
+ex_rates = fread("../ex_rates.csv")
+all$year = as.numeric(substr(as.character(all$transaction_date_iso_date),1,4))
+names(ex_rates) = c("year","x_currency","ex_rate")
+all = merge(all,ex_rates,by=c("year","x_currency"), all.x=T)
+all$country_sector_transaction_value_usd = all$country_sector_transaction_value * all$ex_rate
+
+fwrite(all,paste0(recipient_country,"_transaction_split_recode.csv"))
