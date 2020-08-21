@@ -315,12 +315,6 @@ names(sector_cats) = c("x_sector_cat_code","x_sector_cat_name")
 all$x_sector_cat_code = as.numeric(substr(as.character(all$x_sector_code),1,3))
 all = merge(all,sector_cats,by="x_sector_cat_code",all.x=T)
 
-org_type = fread("../OrganisationType.csv")
-org_type = org_type[,c("code","name")]
-names(org_type) = c("reporting_org_type_code","reporting_org_type_code_name")
-all$reporting_org_type_code = as.numeric(as.character(all$reporting_org_type_code))
-all = merge(all,org_type,by="reporting_org_type_code",all.x=T)
-
 all$x_currency = all$transaction_value_currency
 all$x_currency[which(is.na(all$x_currency))] = all$default_currency[which(is.na(all$x_currency))] 
 
