@@ -6,8 +6,8 @@ lapply(list.of.packages, require, character.only=T)
 wd = "/home/alex/git/iati_qb_country_filter/output/"
 setwd(wd)
 
-recipient_country = "NG"
-start_date = "2015-12-31"
+recipient_country = "GT"
+start_date = "2007-12-31"
 
 # 1. Query filtered transactions ####
 
@@ -65,7 +65,16 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
       destfile=act_filename
     )
   }
-  act <- fread(act_filename)
+  act <- read.table(
+    act_filename,
+    header=T,
+    sep=",",
+    quote=c("\""),
+    na.strings="",
+    stringsAsFactors=FALSE,
+    flush=T,
+    fill=T
+  )
   
   trans_ids = unique(trans$iati_identifier)
   
@@ -169,46 +178,5 @@ all_recip_activity_level$x_recipient_country_code = recipient_country
 all_recip_activity_level$recipient_country_percentage = 100
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
 all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
-unique(all$x_recipient_country_code)
-unique(all$recipient_country_percentage)
 
-# 4. Split by sector ####
-
-all$x_sector_code = as.character(all$transaction_sector_code)
-all$x_sector_vocabulary = all$transaction_sector_vocabulary
-all$x_sector_percentage = "100"
-all$x_sector_vocabulary = as.character(all$x_sector_vocabulary)
-all$x_sector_vocabulary[which(is.na(all$x_sector_code))] = all$sector_vocabulary[which(is.na(all$x_sector_code))]
-all$x_sector_percentage[which(is.na(all$x_sector_code))] = all$sector_percentage[which(is.na(all$x_sector_code))]
-all$x_sector_code[which(is.na(all$x_sector_code))] = all$sector_code[which(is.na(all$x_sector_code))]
-pre = sum(all$transaction_value,na.rm=T)
-
-all.sector = data.table(all[,c("x_sector_code","x_sector_vocabulary","x_sector_percentage")])
-for(i in 1:nrow(all.sector)){
-  all.sector[i,] = single_vocabulary(all.sector[i,])
-}
-agg$x_sector_code = agg.sector$x_sector_code
-agg$x_sector_percentage = agg.sector$x_sector_percentage
-agg$x_sector_vocabulary = agg.sector$x_sector_vocabulary
-agg$transaction.id = c(1:nrow(agg))
-names(agg) = gsub("_",".",names(agg))
-original_names = names(agg)
-agg.split = cSplit(agg,c("x.sector.code", "x.sector.percentage", "x.sector.vocabulary"),",")
-new_names = setdiff(names(agg.split),original_names)
-agg.split.long = reshape(agg.split, varying=new_names, direction="long", sep="_")
-agg.split.long$x.sector.percentage = as.numeric(agg.split.long$x.sector.percentage)
-agg.split.long$x.sector.percentage[which(is.na(agg.split.long$x.sector.percentage))] = 100
-agg.split.long$x.sector.percentage[which(is.na(agg.split.long$x.sector.code))] = NA
-agg.split.long[ , `:=`( max_count = .N , count = 1:.N, sum_percent=sum(x.sector.percentage, na.rm=T)) , by = .(transaction.id) ]
-agg.split.long=subset(agg.split.long, !is.na(x.sector.code) | max_count==1 | count==1)
-
-agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/agg.split.long$sum_percent)*agg.split.long$country.transaction.value
-agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
-agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
-setdiff(unique(agg.split.long$transaction.id),c(1:nrow(agg)))
-agg.split.long[,c("max_count", "count", "transaction.id", "id", "time", "transaction.value.split" ,"sum_percent")] = NULL
-
-agg = agg.split.long
-names(agg) = gsub(".","_",names(agg),fixed=T)
-post = sum(agg$transaction_value,na.rm=T)
-pre == post
+fwrite(all,paste0(recipient_country,"_transactions_split_recipient.csv"))
