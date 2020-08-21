@@ -156,23 +156,63 @@ agg.split.long$recipient.country.percentage[which(is.na(agg.split.long$recipient
 agg.split.long[ , `:=`( sum_percent=sum(recipient.country.percentage, na.rm=T) ) , by = row.id ]
 agg.split.long$transaction.value.split=(agg.split.long$recipient.country.percentage/agg.split.long$sum_percent)*agg.split.long$transaction.value
 agg.split.long$transaction.value.split[which(is.nan(agg.split.long$transaction.value.split))] = 0
-agg.split.long$transaction.value = agg.split.long$transaction.value.split
+agg.split.long$country.transaction.value = agg.split.long$transaction.value.split
 agg.split.long[,c("transaction.value.split", "max_count", "count", "row.id", "id", "time", "sum_percent")] = NULL
-post = sum(agg.split.long$transaction.value,na.rm=T)
+post = sum(agg.split.long$country.transaction.value,na.rm=T)
 pre == post
 all_recip_multi_activity_level_split = subset(agg.split.long,recipient.country.code==recipient_country)
 names(all_recip_multi_activity_level_split) = gsub(".","_",names(all_recip_multi_activity_level_split),fixed=T)
 
 all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
+all_recip_transaction_level$country_transaction_value = all_recip_transaction_level$transaction_value
 all_recip_activity_level$x_recipient_country_code = recipient_country
 all_recip_activity_level$recipient_country_percentage = 100
+all_recip_activity_level$country_transaction_value = all_recip_activity_level$transaction_value
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
 all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
-unique(all$x_recipient_country_code)
-unique(all$recipient_country_percentage)
 
 # 4. Split by sector ####
+
+single_vocabulary = function(row){
+  codes = as.character(row$x_sector_code)
+  percentages = as.character(row$x_sector_percentage)
+  vocabularies = as.character(row$x_sector_vocabulary)
+  
+  code_split = str_split(codes,",")[[1]]
+  if(length(code_split)==1 & length(percentages)==0){
+    percentages = "100"
+  }
+  perc_split = str_split(percentages,",")[[1]]
+  vocab_split = str_split(vocabularies,",")[[1]]
+  if(length(code_split)!=length(perc_split) |
+     length(perc_split)!=length(vocab_split) |
+     length(vocab_split)!=length(code_split)
+  ){
+    row$x_sector_code = ""
+    row$x_sector_percentage = ""
+    row$x_sector_vocabulary = ""
+    return(row)
+  }
+  row_df = data.frame(code=code_split,percent=perc_split,vocab=vocab_split)
+  if("1" %in% vocab_split){
+    row_df = subset(row_df,vocab=="1")
+  }else if("2" %in% vocab_split){
+    row_df = subset(row_df,vocab=="2")
+  }else if("98" %in% vocab_split){
+    row_df = subset(row_df,vocab=="98")
+  }else if("99" %in% vocab_split){
+    row_df = subset(row_df,vocab=="99")
+  }else if("DAC" %in% vocab_split){
+    row_df = subset(row_df,vocab=="DAC")
+  }else{
+    row_df = subset(row_df,is.na(vocab))
+  }
+  row$x_sector_code = paste0(row_df$code,collapse=",")
+  row$x_sector_percentage = paste0(row_df$percent,collapse=",")
+  row$x_sector_vocabulary = paste0(row_df$vocab,collapse=",")
+  return(row)
+}
 
 all$x_sector_code = as.character(all$transaction_sector_code)
 all$x_sector_vocabulary = all$transaction_sector_vocabulary
@@ -181,19 +221,22 @@ all$x_sector_vocabulary = as.character(all$x_sector_vocabulary)
 all$x_sector_vocabulary[which(is.na(all$x_sector_code))] = all$sector_vocabulary[which(is.na(all$x_sector_code))]
 all$x_sector_percentage[which(is.na(all$x_sector_code))] = all$sector_percentage[which(is.na(all$x_sector_code))]
 all$x_sector_code[which(is.na(all$x_sector_code))] = all$sector_code[which(is.na(all$x_sector_code))]
-pre = sum(all$transaction_value,na.rm=T)
+pre = sum(all$country_transaction_value,na.rm=T)
 
 all.sector = data.table(all[,c("x_sector_code","x_sector_vocabulary","x_sector_percentage")])
+pb = txtProgressBar(max=nrow(all.sector),style=3)
 for(i in 1:nrow(all.sector)){
+  setTxtProgressBar(pb,i)
   all.sector[i,] = single_vocabulary(all.sector[i,])
 }
-agg$x_sector_code = agg.sector$x_sector_code
-agg$x_sector_percentage = agg.sector$x_sector_percentage
-agg$x_sector_vocabulary = agg.sector$x_sector_vocabulary
-agg$transaction.id = c(1:nrow(agg))
-names(agg) = gsub("_",".",names(agg))
-original_names = names(agg)
-agg.split = cSplit(agg,c("x.sector.code", "x.sector.percentage", "x.sector.vocabulary"),",")
+close(pb)
+all$x_sector_code = all.sector$x_sector_code
+all$x_sector_percentage = all.sector$x_sector_percentage
+all$x_sector_vocabulary = all.sector$x_sector_vocabulary
+all$transaction.id = c(1:nrow(all))
+names(all) = gsub("_",".",names(all))
+original_names = names(all)
+agg.split = cSplit(all,c("x.sector.code", "x.sector.percentage", "x.sector.vocabulary"),",")
 new_names = setdiff(names(agg.split),original_names)
 agg.split.long = reshape(agg.split, varying=new_names, direction="long", sep="_")
 agg.split.long$x.sector.percentage = as.numeric(agg.split.long$x.sector.percentage)
@@ -205,10 +248,10 @@ agg.split.long=subset(agg.split.long, !is.na(x.sector.code) | max_count==1 | cou
 agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/agg.split.long$sum_percent)*agg.split.long$country.transaction.value
 agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
 agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
-setdiff(unique(agg.split.long$transaction.id),c(1:nrow(agg)))
+setdiff(unique(agg.split.long$transaction.id),c(1:nrow(all)))
 agg.split.long[,c("max_count", "count", "transaction.id", "id", "time", "transaction.value.split" ,"sum_percent")] = NULL
 
-agg = agg.split.long
-names(agg) = gsub(".","_",names(agg),fixed=T)
-post = sum(agg$transaction_value,na.rm=T)
+all = agg.split.long
+names(all) = gsub(".","_",names(all),fixed=T)
+post = sum(all$country_sector_transaction_value,na.rm=T)
 pre == post
