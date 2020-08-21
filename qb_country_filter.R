@@ -257,8 +257,7 @@ names(all) = gsub(".","_",names(all),fixed=T)
 post = sum(all$country_sector_transaction_value,na.rm=T)
 pre == post
 
-# 5. Recode, join codelists, convert to USD
-
+# 5. Recode, join codelists, convert to USD ####
 
 org_id_imp = fread("../IATIOrganisationIdentifier.csv")
 org_id_imp = org_id_imp[,c("code","name")]
@@ -302,6 +301,8 @@ implementers = function(row){
 sectors = fread("../Sector.csv")
 sectors = sectors[,c("code","name")]
 names(sectors) = c("x_sector_code","x_sector_name")
+all$x_sector_code[which(!(all$x_sector_vocabulary %in% c(1,2)))] = NA
+all$x_sector_vocabulary[which(!(all$x_sector_vocabulary %in% c(1,2)))] = NA
 all$x_sector_code = as.numeric(as.character(all$x_sector_code))
 all$x_sector_vocabulary[which(is.na(all$x_sector_code))] = 1
 all$x_sector_percentage[which(is.na(all$x_sector_code))] = 100
@@ -316,7 +317,7 @@ all = merge(all,sector_cats,by="x_sector_cat_code",all.x=T)
 
 org_type = fread("../OrganisationType.csv")
 org_type = org_type[,c("code","name")]
-names(org_type) = c("reporting_org_type_code","reporting_org_type_name")
+names(org_type) = c("reporting_org_type_code","reporting_org_type_code_name")
 all$reporting_org_type_code = as.numeric(as.character(all$reporting_org_type_code))
 all = merge(all,org_type,by="reporting_org_type_code",all.x=T)
 
