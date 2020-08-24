@@ -155,7 +155,7 @@ agg.split.long[ , `:=`( max_count = .N , count = 1:.N), by = row.id ]
 agg.split.long=subset(agg.split.long, !is.na(recipient.country.code) | max_count==1 | count==1)
 agg.split.long$recipient.country.percentage[which(is.na(agg.split.long$recipient.country.percentage))] = 100
 agg.split.long[ , `:=`( sum_percent=sum(recipient.country.percentage, na.rm=T) ) , by = row.id ]
-agg.split.long$transaction.value.split=(agg.split.long$recipient.country.percentage/agg.split.long$sum_percent)*agg.split.long$transaction.value
+agg.split.long$transaction.value.split=(agg.split.long$recipient.country.percentage/100)*agg.split.long$transaction.value
 agg.split.long$transaction.value.split[which(is.nan(agg.split.long$transaction.value.split))] = 0
 agg.split.long$country.transaction.value = agg.split.long$transaction.value.split
 agg.split.long[,c("transaction.value.split", "max_count", "count", "row.id", "id", "time", "sum_percent")] = NULL
@@ -246,7 +246,7 @@ agg.split.long$x.sector.percentage[which(is.na(agg.split.long$x.sector.code))] =
 agg.split.long[ , `:=`( max_count = .N , count = 1:.N, sum_percent=sum(x.sector.percentage, na.rm=T)) , by = .(transaction.id) ]
 agg.split.long=subset(agg.split.long, !is.na(x.sector.code) | max_count==1 | count==1)
 
-agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/agg.split.long$sum_percent)*agg.split.long$country.transaction.value
+agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/100)*agg.split.long$country.transaction.value
 agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
 agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
 setdiff(unique(agg.split.long$transaction.id),c(1:nrow(all)))
