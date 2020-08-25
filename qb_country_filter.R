@@ -131,6 +131,7 @@ overlapping_names = intersect(names(act),names(trans))
 overlapping_names = overlapping_names[which(overlapping_names!="iati_identifier")]
 act[,overlapping_names] = NULL
 
+act = unique(act)
 all = merge(trans,act,by="iati_identifier")
 setnames(all,"transaction_type", "transaction_type_code")
 fwrite(all,paste0(recipient_country,"_transactions_merge.csv"))
