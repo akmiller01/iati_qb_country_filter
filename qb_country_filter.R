@@ -6,7 +6,7 @@ lapply(list.of.packages, require, character.only=T)
 wd = "/home/alex/git/iati_qb_country_filter/output/"
 setwd(wd)
 
-recipient_country = "NG"
+recipient_country = "TD"
 start_date = "2015-12-31"
 
 # 1. Query filtered transactions ####
@@ -169,7 +169,7 @@ all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
 all_recip_transaction_level$country_transaction_value = all_recip_transaction_level$transaction_value
 all_recip_activity_level$x_recipient_country_code = recipient_country
-all_recip_activity_level$recipient_country_percentage = 100
+all_recip_activity_level$recipient_country_percentage = gsub(",","",all_recip_activity_level$recipient_country_percentage)
 all_recip_activity_level$country_transaction_value = all_recip_activity_level$transaction_value
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
 all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
