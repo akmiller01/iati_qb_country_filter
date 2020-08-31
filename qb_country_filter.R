@@ -257,7 +257,7 @@ agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/100)*
 agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
 agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
 setdiff(unique(agg.split.long$transaction.id),c(1:nrow(all)))
-# agg.split.long$x_sector_percentage_sum = agg.split.long$sum_percent
+agg.split.long$x_sector_percentage_sum = agg.split.long$sum_percent
 agg.split.long[,c("max_count", "count", "transaction.id", "id", "time", "transaction.value.split" ,"sum_percent")] = NULL
 
 all = agg.split.long
