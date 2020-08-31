@@ -165,6 +165,7 @@ pre == post
 all_recip_multi_activity_level_split = subset(agg.split.long,recipient.country.code==recipient_country)
 names(all_recip_multi_activity_level_split) = gsub(".","_",names(all_recip_multi_activity_level_split),fixed=T)
 
+all_recip_transaction_level$recipient_split_type = paste0(recipient_country," only")
 all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
 all_recip_transaction_level$country_transaction_value = all_recip_transaction_level$transaction_value
@@ -172,7 +173,11 @@ all_recip_activity_level$x_recipient_country_code = recipient_country
 all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
 all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
 all_recip_activity_level$country_transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
+all_recip_activity_level$recipient_split_type = "Multi-country"
+all_recip_activity_level$recipient_split_type[which(all_recip_activity_level$recipient_country_percentage>=100)] = paste0(recipient_country," only")
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
+all_recip_multi_activity_level_split$recipient_split_type = "Multi-country"
+all_recip_multi_activity_level_split$recipient_split_type[which(all_recip_multi_activity_level_split$recipient_country_percentage>=100)] = paste0(recipient_country," only")
 all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
 
 # 4. Split by sector ####
@@ -252,6 +257,7 @@ agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/100)*
 agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
 agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
 setdiff(unique(agg.split.long$transaction.id),c(1:nrow(all)))
+agg.split.long$x_sector_percentage_sum = agg.split.long$sum_percent
 agg.split.long[,c("max_count", "count", "transaction.id", "id", "time", "transaction.value.split" ,"sum_percent")] = NULL
 
 all = agg.split.long
@@ -341,6 +347,8 @@ for(i in 1:nrow(all_implementing)){
 close(pb)
 all_implementing = cSplit(all_implementing,c("implementing_narrative"),",")
 all_implementing[,c("participating_org_role","participating_org_narrative","participating_org_type","participating_org_ref")] = NULL
+all_implementing[,1][which(is.na(all_implementing[,1]))] = "Not specified"
+
 all = cbind(all,all_implementing)
 
 all$x_transaction_provider_org = all$transaction_provider_org_narrative
@@ -390,7 +398,19 @@ all = merge(all,aid_types,by="x_aid_type_code",all.x=T)
 ex_rates = fread("../ex_rates.csv")
 all$year = as.numeric(substr(as.character(all$transaction_date_iso_date),1,4))
 names(ex_rates) = c("year","x_currency","ex_rate")
+setdiff(unique(all$x_currency),unique(ex_rates$x_currency))
+all$x_currency[which(all$x_currency=="FKP")] = "GBP"
 all = merge(all,ex_rates,by=c("year","x_currency"), all.x=T)
 all$country_sector_transaction_value_usd = all$country_sector_transaction_value * all$ex_rate
+
+all$title_narrative[which(is.na(all$title_narrative))] = "No title reported"
+all$description_narrative[which(is.na(all$description_narrative))] = "No description reported"
+all = subset(all,!is.na(transaction_value))
+all$x_finance_type_name[which(is.na(all$x_finance_type_name))] = "Not specified"
+all$x_aid_type_name[which(is.na(all$x_aid_type_name))] = "Not specified"
+all$x_sector_name[which(is.na(all$x_sector_name))] = all$x_sector_cat_name[which(is.na(all$x_sector_name))] 
+all$transaction_date_iso_date = anydate(all$transaction_date_iso_date)
+all$transaction_date_iso_date_f = anydate(all$transaction_date_iso_date_f)
+all$transaction_value_date = anydate(all$transaction_value_date)
 
 fwrite(all,paste0(recipient_country,"_transaction_split_recode.csv"))

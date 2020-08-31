@@ -3,7 +3,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only=T)
 
-setwd("~/git/IATI-Covid")
+setwd("~/git/iati_qb_country_filter")
 
 dat <- fread("https://www.imf.org/external/pubs/ft/weo/2019/02/weodata/WEOOct2019all.xls",sep="\t",na.strings=c("","n/a","--"),check.names=T)
 dat = subset(dat,WEO.Subject.Code %in% c("NGDP","NGDPD"))
