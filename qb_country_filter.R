@@ -405,7 +405,7 @@ all$country_sector_transaction_value_usd = all$country_sector_transaction_value 
 
 all$title_narrative[which(is.na(all$title_narrative))] = "No title reported"
 all$description_narrative[which(is.na(all$description_narrative))] = "No description reported"
-all = subset(all,!is.na(transaction_value) & transaction_value>0)
+all = subset(all,!is.na(transaction_value) & transaction_value!=0)
 all$x_finance_type_name[which(is.na(all$x_finance_type_name))] = "Not specified"
 all$x_aid_type_name[which(is.na(all$x_aid_type_name))] = "Not specified"
 all$x_sector_name[which(is.na(all$x_sector_name))] = all$x_sector_cat_name[which(is.na(all$x_sector_name))] 
