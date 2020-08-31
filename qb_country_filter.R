@@ -257,7 +257,7 @@ agg.split.long$transaction.value.split=(agg.split.long$x.sector.percentage/100)*
 agg.split.long$transaction.value.split[which(is.na(agg.split.long$transaction.value.split))] = agg.split.long$country.transaction.value[which(is.na(agg.split.long$transaction.value.split))]
 agg.split.long$country.sector.transaction.value = agg.split.long$transaction.value.split
 setdiff(unique(agg.split.long$transaction.id),c(1:nrow(all)))
-agg.split.long$x_sector_percentage_sum = agg.split.long$sum_percent
+# agg.split.long$x_sector_percentage_sum = agg.split.long$sum_percent
 agg.split.long[,c("max_count", "count", "transaction.id", "id", "time", "transaction.value.split" ,"sum_percent")] = NULL
 
 all = agg.split.long
@@ -405,12 +405,9 @@ all$country_sector_transaction_value_usd = all$country_sector_transaction_value 
 
 all$title_narrative[which(is.na(all$title_narrative))] = "No title reported"
 all$description_narrative[which(is.na(all$description_narrative))] = "No description reported"
-all = subset(all,!is.na(transaction_value))
+all = subset(all,!is.na(transaction_value) & transaction_value>0)
 all$x_finance_type_name[which(is.na(all$x_finance_type_name))] = "Not specified"
 all$x_aid_type_name[which(is.na(all$x_aid_type_name))] = "Not specified"
 all$x_sector_name[which(is.na(all$x_sector_name))] = all$x_sector_cat_name[which(is.na(all$x_sector_name))] 
-all$transaction_date_iso_date = anydate(all$transaction_date_iso_date)
-all$transaction_date_iso_date_f = anydate(all$transaction_date_iso_date_f)
-all$transaction_value_date = anydate(all$transaction_value_date)
 
 fwrite(all,paste0(recipient_country,"_transaction_split_recode.csv"))
