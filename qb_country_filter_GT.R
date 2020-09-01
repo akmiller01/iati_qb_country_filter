@@ -163,7 +163,7 @@ agg.split.long[ , `:=`( max_count = .N , count = 1:.N), by = row.id ]
 agg.split.long=subset(agg.split.long, !is.na(recipient.country.code) | max_count==1 | count==1)
 agg.split.long$recipient.country.percentage[which(is.na(agg.split.long$recipient.country.percentage))] = 100
 agg.split.long[ , `:=`( sum_percent=sum(recipient.country.percentage, na.rm=T) ) , by = row.id ]
-agg.split.long$transaction.value.split=(agg.split.long$recipient.country.percentage/agg.split.long$sum_percent)*agg.split.long$transaction.value
+agg.split.long$transaction.value.split=(agg.split.long$recipient.country.percentage/100)*agg.split.long$transaction.value
 agg.split.long$transaction.value.split[which(is.nan(agg.split.long$transaction.value.split))] = 0
 agg.split.long$transaction.value = agg.split.long$transaction.value.split
 agg.split.long[,c("transaction.value.split", "max_count", "count", "row.id", "id", "time", "sum_percent")] = NULL
@@ -175,7 +175,9 @@ names(all_recip_multi_activity_level_split) = gsub(".","_",names(all_recip_multi
 all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
 all_recip_activity_level$x_recipient_country_code = recipient_country
-all_recip_activity_level$recipient_country_percentage = 100
+all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
+all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
+all_recip_activity_level$transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
 all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
 
