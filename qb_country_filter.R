@@ -6,7 +6,7 @@ lapply(list.of.packages, require, character.only=T)
 wd = "/home/alex/git/iati_qb_country_filter/output/"
 setwd(wd)
 
-recipient_country = "TD"
+recipient_country = "CG"
 start_date = "2015-12-31"
 
 # 1. Query filtered transactions ####
@@ -65,7 +65,16 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
       destfile=act_filename
     )
   }
-  act <- fread(act_filename)
+  act <- read.table(
+    act_filename,
+    header=T,
+    sep=",",
+    quote=c("\""),
+    na.strings="",
+    stringsAsFactors=FALSE,
+    flush=T,
+    fill=T
+  )
   
   trans_ids = unique(trans$iati_identifier)
   
@@ -83,7 +92,7 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
   search_query = ""
   search_grid = expand.grid(search_fields, search_terms, stringsAsFactors = F)
   search_strs = paste0(search_grid$Var1, ':"', search_grid$Var2, '"')
-  chunk_seq = round(seq(1,length(search_strs),length.out=200))
+  chunk_seq = round(seq(1,length(search_strs),length.out=100))
   
   
   act_list = list()

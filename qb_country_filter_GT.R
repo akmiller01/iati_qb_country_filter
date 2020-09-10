@@ -1,4 +1,4 @@
-list.of.packages <- c("data.table", "anytime", "dplyr", "reshape2","splitstackshape","stringr", "readr")
+list.of.packages <- c("data.table", "anytime", "dplyr", "reshape2","splitstackshape","stringr", "readr", "openxlsx")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only=T)
@@ -12,7 +12,7 @@ start_date = "2007-12-31"
 # 1. Query filtered transactions ####
 
 url = paste0(
-  "https://iatidatastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
+  "https://test-datastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
   recipient_country,
   ") OR activity_recipient_country_code:(",
   recipient_country,
@@ -50,7 +50,7 @@ trans[,drop] = NULL
 
 if(!file.exists(paste0(recipient_country,"_activities.RData"))){
   big_url = paste0(
-    "https://iatidatastore.iatistandard.org/search/activity?q=recipient_country_code:(",
+    "https://test-datastore.iatistandard.org/search/activity?q=recipient_country_code:(",
     recipient_country,
     ") AND activity_date_start_actual_f:[",
     start_date,
@@ -103,7 +103,7 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
     chunk_strs = search_strs[start_i:end_i]
     search_query = paste0(chunk_strs,collapse=" OR ")
     search_url = paste0(
-      'https://iatidatastore.iatistandard.org/search/activity?q=(',
+      'https://test-datastore.iatistandard.org/search/activity?q=(',
       search_query,
       ')&wt=xslt&tr=activity-csv.xsl&rows=10000'
     )
@@ -114,7 +114,17 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
         destfile=act_filename
       )
     }
-    tmp <- fread(act_filename,colClasses = c(rep("character", 221)))
+    tmp <- read.table(
+      act_filename,
+      header=T,
+      sep=",",
+      quote=c("\""),
+      na.strings="",
+      stringsAsFactors=FALSE,
+      flush=T,
+      fill=T,
+      colClasses = c(rep("character", 221))
+    )
     act_list[[i]] = tmp
   }
   
@@ -133,7 +143,6 @@ drop = c(drop, names(act)[which(startsWith(names(act),"result"))])
 drop = c(drop, names(act)[which(startsWith(names(act),"crs"))])
 drop = c(drop, names(act)[which(startsWith(names(act),"document"))])
 
-drop = c(drop,"V221")
 drop = unique(drop)
 act[,drop] = NULL
 overlapping_names = intersect(names(act),names(trans))
@@ -158,8 +167,9 @@ original_names = names(all_recip_multi_activity_level)
 agg.split = cSplit(all_recip_multi_activity_level,c("recipient.country.code", "recipient.country.percentage"),",")
 new_names = setdiff(names(agg.split),original_names)
 agg.split.long = reshape(agg.split, varying=new_names, direction="long", sep="_")
-agg.split.long$transaction.value = as.numeric(agg.split.long$transaction.value)
-agg.split.long$recipient.country.percentage = as.numeric(agg.split.long$recipient.country.percentage)
+rm(act, agg.split, all, trans)
+# agg.split.long$transaction.value = as.numeric(agg.split.long$transaction.value)
+# agg.split.long$recipient.country.percentage = as.numeric(agg.split.long$recipient.country.percentage)
 agg.split.long[ , `:=`( max_count = .N , count = 1:.N), by = row.id ]
 agg.split.long=subset(agg.split.long, !is.na(recipient.country.code) | max_count==1 | count==1)
 agg.split.long$recipient.country.percentage[which(is.na(agg.split.long$recipient.country.percentage))] = 100
@@ -175,11 +185,15 @@ names(all_recip_multi_activity_level_split) = gsub(".","_",names(all_recip_multi
 
 all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
-all_recip_activity_level$x_recipient_country_code = recipient_country
-all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
-all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
-all_recip_activity_level$transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
-all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
+if(nrow(all_recip_activity_level) > 0){
+  all_recip_activity_level$x_recipient_country_code = recipient_country
+  all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
+  all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
+  all_recip_activity_level$transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
+  all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
+}else{
+  all = rbind(all_recip_transaction_level, all_recip_multi_activity_level_split)
+}
 
 fwrite(all,paste0(recipient_country,"_transactions_split_recipient.csv"))
