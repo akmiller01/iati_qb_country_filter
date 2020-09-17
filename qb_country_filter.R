@@ -6,13 +6,13 @@ lapply(list.of.packages, require, character.only=T)
 wd = "/home/alex/git/iati_qb_country_filter/output/"
 setwd(wd)
 
-recipient_country = "CG"
+recipient_country = "NP"
 start_date = "2015-12-31"
 
 # 1. Query filtered transactions ####
 
 url = paste0(
-  "https://iatidatastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
+  "https://test-datastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
   recipient_country,
   ") OR activity_recipient_country_code:(",
   recipient_country,
@@ -50,7 +50,7 @@ trans[,drop] = NULL
 
 if(!file.exists(paste0(recipient_country,"_activities.RData"))){
   big_url = paste0(
-    "https://iatidatastore.iatistandard.org/search/activity?q=recipient_country_code:(",
+    "https://test-datastore.iatistandard.org/search/activity?q=recipient_country_code:(",
     recipient_country,
     ") AND activity_date_start_actual_f:[",
     start_date,
@@ -103,7 +103,7 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
     chunk_strs = search_strs[start_i:end_i]
     search_query = paste0(chunk_strs,collapse=" OR ")
     search_url = paste0(
-      'https://iatidatastore.iatistandard.org/search/activity?q=(',
+      'https://test-datastore.iatistandard.org/search/activity?q=(',
       search_query,
       ')&wt=xslt&tr=activity-csv.xsl&rows=10000'
     )
@@ -114,7 +114,17 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
         destfile=act_filename
       )
     }
-    tmp <- fread(act_filename,colClasses = c(rep("character", 221)))
+    tmp <- read.table(
+      act_filename,
+      header=T,
+      sep=",",
+      quote=c("\""),
+      na.strings="",
+      stringsAsFactors=FALSE,
+      flush=T,
+      fill=T,
+      colClasses = c(rep("character", 221))
+    )
     act_list[[i]] = tmp
   }
   

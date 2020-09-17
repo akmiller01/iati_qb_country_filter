@@ -197,3 +197,9 @@ if(nrow(all_recip_activity_level) > 0){
 }
 
 fwrite(all,paste0(recipient_country,"_transactions_split_recipient.csv"))
+
+all.test = read.xlsx("GT_transactions_split_recipient.xlsx")
+setdiff(unique(all$reporting_org_ref), unique(all.test$reporting_org_ref))
+setdiff(unique(all$iati_identifier), unique(all.test$iati_identifier))
+sum(all$transaction_value, na.rm=T)
+sum(all.test$transaction_value,na.rm=T)
