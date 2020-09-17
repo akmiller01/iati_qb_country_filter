@@ -1,4 +1,4 @@
-list.of.packages <- c("data.table", "anytime", "dplyr", "reshape2","splitstackshape","stringr", "httr","XML","jsonlite","sp", "rgdal")
+list.of.packages <- c("data.table", "anytime", "dplyr", "reshape2","splitstackshape","stringr", "httr","XML","jsonlite","sp", "rgdal","ggplot2","scales","RColorBrewer")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only=T)
@@ -90,3 +90,44 @@ non_value_vars = setdiff(names(td_coords),value_vars)
 td_coords = td_coords[,c(non_value_vars,value_vars),with=F]
 
 fwrite(td_coords,"td_coords.csv")
+
+# plot_dat = td_coords[,.(disbursements=sum(Disbursement,na.rm=T),expenditures=sum(Expenditure,na.rm=T)),by=.(transaction_quarter,location_point_pos_adm1_name)]
+# plot_dat$total_spend = plot_dat$disbursements + plot_dat$expenditures
+# setnames(plot_dat,"location_point_pos_adm1_name","admin1Name")
+# 
+# td.f = fortify(td,region="admin1Name")
+# setnames(td.f,"id","admin1Name")
+# 
+# plot_dat_grid = expand.grid(admin1Name=unique(td$admin1Name),transaction_quarter=unique(plot_dat$transaction_quarter))
+# plot_dat = merge(plot_dat,plot_dat_grid,all=T)
+# plot_dat = subset(plot_dat,transaction_quarter!="2020_Q3")
+# td.f = merge(td.f,plot_dat,by="admin1Name",all.x=T)
+# 
+# td.breaks = c(
+#   0,
+#   1000,
+#   10000,
+#   100000,
+#   1000000,
+#   10000000,
+#   100000000
+# )
+# 
+# ggplot(td.f)+
+#   geom_polygon( aes(x=long,y=lat,group=group,fill=total_spend,color="#aaaaaa",size=0.21))+
+#   scale_color_identity()+
+#   scale_size_identity()+
+#   coord_fixed(1) +
+#   scale_fill_gradientn(
+#     na.value="#d0cccf",
+#     guide="colorbar",
+#     colors=brewer.pal(9,"YlOrRd"),
+#     labels=dollar,
+#     breaks=td.breaks,
+#     trans = "log10"
+#   ) +
+#   facet_wrap(~transaction_quarter,ncol=4) +
+#   expand_limits(x=c(13.47,23),y=c(7.44,23.44))+
+#   theme_classic()+
+#   theme(axis.line = element_blank(),axis.text=element_blank(),axis.ticks = element_blank())+
+#   labs(x="",y="",fill="Total spend\nExp+Disb\nUSD")
