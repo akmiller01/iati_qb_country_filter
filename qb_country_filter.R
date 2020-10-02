@@ -12,7 +12,7 @@ start_date = "2015-12-31"
 # 1. Query filtered transactions ####
 
 url = paste0(
-  "https://test-datastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
+  "https://iatidatastore.iatistandard.org/search/transaction?q=((transaction_recipient_country_code:(",
   recipient_country,
   ") OR activity_recipient_country_code:(",
   recipient_country,
@@ -50,7 +50,7 @@ trans[,drop] = NULL
 
 if(!file.exists(paste0(recipient_country,"_activities.RData"))){
   big_url = paste0(
-    "https://test-datastore.iatistandard.org/search/activity?q=recipient_country_code:(",
+    "https://iatidatastore.iatistandard.org/search/activity?q=recipient_country_code:(",
     recipient_country,
     ") AND activity_date_start_actual_f:[",
     start_date,
@@ -103,7 +103,7 @@ if(!file.exists(paste0(recipient_country,"_activities.RData"))){
     chunk_strs = search_strs[start_i:end_i]
     search_query = paste0(chunk_strs,collapse=" OR ")
     search_url = paste0(
-      'https://test-datastore.iatistandard.org/search/activity?q=(',
+      'https://iatidatastore.iatistandard.org/search/activity?q=(',
       search_query,
       ')&wt=xslt&tr=activity-csv.xsl&rows=10000'
     )
