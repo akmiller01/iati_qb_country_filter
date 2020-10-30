@@ -6,7 +6,11 @@ lapply(list.of.packages, require, character.only=T)
 wd = "/home/alex/git/iati_qb_country_filter/output/"
 setwd(wd)
 
-recipient_country = "NP"
+recipient_country = "CG"
+cached_files = list.files(pattern=paste0(recipient_country,"_","(.*)"))
+for(cached_file in cached_files){
+  file.remove(cached_file)
+}
 start_date = "2015-12-31"
 
 # 1. Query filtered transactions ####
@@ -169,8 +173,8 @@ original_names = names(all_recip_multi_activity_level)
 agg.split = cSplit(all_recip_multi_activity_level,c("recipient.country.code", "recipient.country.percentage"),",")
 new_names = setdiff(names(agg.split),original_names)
 agg.split.long = reshape(agg.split, varying=new_names, direction="long", sep="_")
-agg.split.long$transaction.value = as.numeric(agg.split.long$transaction.value)
-agg.split.long$recipient.country.percentage = as.numeric(agg.split.long$recipient.country.percentage)
+# agg.split.long$transaction.value = as.numeric(agg.split.long$transaction.value)
+# agg.split.long$recipient.country.percentage = as.numeric(agg.split.long$recipient.country.percentage)
 agg.split.long[ , `:=`( max_count = .N , count = 1:.N), by = row.id ]
 agg.split.long=subset(agg.split.long, !is.na(recipient.country.code) | max_count==1 | count==1)
 agg.split.long$recipient.country.percentage[which(is.na(agg.split.long$recipient.country.percentage))] = 100
@@ -188,16 +192,20 @@ all_recip_transaction_level$recipient_split_type = paste0(recipient_country," on
 all_recip_transaction_level$recipient_country_percentage = 100
 all_recip_transaction_level$x_recipient_country_code = all_recip_transaction_level$transaction_recipient_country_code
 all_recip_transaction_level$country_transaction_value = all_recip_transaction_level$transaction_value
-all_recip_activity_level$x_recipient_country_code = recipient_country
-all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
-all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
-all_recip_activity_level$country_transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
-all_recip_activity_level$recipient_split_type = "Multi-country"
-all_recip_activity_level$recipient_split_type[which(all_recip_activity_level$recipient_country_percentage>=100)] = paste0(recipient_country," only")
 all_recip_multi_activity_level_split$x_recipient_country_code = all_recip_multi_activity_level_split$recipient_country_code
 all_recip_multi_activity_level_split$recipient_split_type = "Multi-country"
 all_recip_multi_activity_level_split$recipient_split_type[which(all_recip_multi_activity_level_split$recipient_country_percentage>=100)] = paste0(recipient_country," only")
-all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
+if(nrow(all_recip_activity_level)>0){
+  all_recip_activity_level$x_recipient_country_code = recipient_country
+  all_recip_activity_level$recipient_country_percentage = as.numeric(gsub(",","",all_recip_activity_level$recipient_country_percentage))
+  all_recip_activity_level$recipient_country_percentage[which(is.na(all_recip_activity_level$recipient_country_percentage))] = 100
+  all_recip_activity_level$country_transaction_value = all_recip_activity_level$transaction_value * (all_recip_activity_level$recipient_country_percentage/100)
+  all_recip_activity_level$recipient_split_type = "Multi-country"
+  all_recip_activity_level$recipient_split_type[which(all_recip_activity_level$recipient_country_percentage>=100)] = paste0(recipient_country," only")
+  all = rbind(all_recip_transaction_level, all_recip_activity_level,all_recip_multi_activity_level_split)
+}else{
+  all = rbind(all_recip_transaction_level,all_recip_multi_activity_level_split)
+}
 
 # 4. Split by sector ####
 
@@ -266,7 +274,7 @@ original_names = names(all)
 agg.split = cSplit(all,c("x.sector.code", "x.sector.percentage", "x.sector.vocabulary"),",")
 new_names = setdiff(names(agg.split),original_names)
 agg.split.long = reshape(agg.split, varying=new_names, direction="long", sep="_")
-agg.split.long$x.sector.percentage = as.numeric(agg.split.long$x.sector.percentage)
+# agg.split.long$x.sector.percentage = as.numeric(agg.split.long$x.sector.percentage)
 agg.split.long$x.sector.percentage[which(is.na(agg.split.long$x.sector.percentage))] = 100
 agg.split.long$x.sector.percentage[which(is.na(agg.split.long$x.sector.code))] = NA
 agg.split.long[ , `:=`( max_count = .N , count = 1:.N, sum_percent=sum(x.sector.percentage, na.rm=T)) , by = .(transaction.id) ]
